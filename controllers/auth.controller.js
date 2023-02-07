@@ -6,7 +6,7 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 
 const {sendEmail } = require('../utils/sendEmail');
-const { response } = require('express');
+
 
 //registration - signup
 const register = async (req, res) =>{
@@ -114,34 +114,32 @@ const forgetPassword = async (req, res) =>{
             await token.deleteOne();
         }
         //new token will be created
-        let newToken = crypto.randomBytes(32).toString('hex');
+        let newToken = crypto.randomBytes(32).toString('hex'); 
 
         // new token --> hashed token - for secured
         const hashedToken = await bcrypt.hash(newToken , 10);
 
         //validating the payload - all fields are valid
-        const tokenPayload = new Tokens({userI : user._id , token : hashedToken , createdAd :Date.now()});
+        const tokenPayload = new Tokens({userId : user._id , token : hashedToken , createdAd :Date.now()});
 
         await tokenPayload.save();
 
         const link = `http://localhost:3000/passwordReset?token=${newToken}&id=${user._id}`;
 
-        const isSent = await sendEmail(user.email, 'password Reset link', {name : user.name , link : link});
-
-        if (!isSent) {
-            return res.status(500).send({message : 'Internal server error'})
-        }
+        await sendEmail(user.email, 'Password Reset Link', {name: user.name, link: link});
 
         res.status(200).send({message : 'Email sent successfully'});
 
     }catch(error){
-        res.status(500).send({message : 'Internal Server Error'});
+        console.log('Error: ', error)
+        res.status(500).send({message: "Internal Server Error"});
     }
 }
 
 //Reset password
 const resetPassword = async (req, res) =>{
     const {userId, token , password }= req.body;
+
     let resetToken = await Tokens.findOne({userId : userId});
 
     if(!resetToken){
@@ -156,7 +154,7 @@ const resetPassword = async (req, res) =>{
     
     const hashedPassword = await bcrypt.hash(password , 10);
 
-    await Users.findByIdAndUpdate({_id : userId},{hashedPassword : hashedPassword} ,(err, data) =>{
+    Users.findByIdAndUpdate({_id : userId},{$set : {hashedPassword : hashedPassword}} ,(err, data) =>{
         if(err){
             return res.status(400).send({message : 'Error while resetting password'});
         }        

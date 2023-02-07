@@ -1,8 +1,8 @@
 const nodemailer = require('nodemailer');
 
-exports.sendEmail = async ( email, subject , userPayload)=>{
+exports.sendEmail = async ( email, subject , payload)=>{
     try{
-        var transpoter = await nodemailer.createTransport({
+        var transporter = await nodemailer.createTransport({
             service : 'gmail',
             auth : {
                 user: 'ajselva04@gmail.com',
@@ -14,21 +14,22 @@ exports.sendEmail = async ( email, subject , userPayload)=>{
             from : 'ajselva04@gmail.com',
             to : email,
             subject : subject,
-            text : JSON.stringify(userPayload)
+            text : JSON.stringify(payload)
             //users details (users name & link)
         };
 
-        await transpoter.sendMail(mailOptions , (err, data)=>{
+        await transporter.sendMail(mailOptions , (err, data)=>{
             if(err){
+                console.log('Error While sending mail' , err);
                 return false;
             }
-
+            console.log('Success..')
             return  true;
         })
 
     }catch(error){
+        console.log('Error  : send mail :' , err);
         return false;
     }
 }
 
-// module.exports = {sendMail}
