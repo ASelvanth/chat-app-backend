@@ -1,7 +1,6 @@
 // const { expressjwt } = require('express-jwt');
 const jwt = require('jsonwebtoken');
 
-
 exports.isAuth = async (req, res, next) =>{
 
     const { cookies } = req;
@@ -10,8 +9,8 @@ exports.isAuth = async (req, res, next) =>{
     // let user = req.auth._id === req.params.userID;
     // let user = req.auth._id ;
     // let user = true ;
-    let data = await jwt.verify(cookies.accessToken ,process.env.SECRET_KEY);
-    console.log('Decrypted Data:', data._id);
+    const data = jwt.verify(cookies.accessToken ,process.env.SECRET_KEY);
+    // console.log('Decrypted Data:', data._id);
     req.id = data._id;
 
     if(!req.id){
