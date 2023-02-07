@@ -1,10 +1,14 @@
-const express = require('express');
-const { isAuth } = require('../utils/authentication');
+// const express = require('express');
+// const { isAuth } = require('../utils/authentication');
 
-const router = express.Router();
+// const router = express.Router();
 
-router.get('/:userID/chat', isAuth , (req, res) => {
-    res.send({message : "Welcome to chat room.!"})
-})
+// router.get('/:userID/chat', isAuth , (req, res) => {
+//     res.send({message : "Welcome to chat room.!"})
+// })
 
-module.exports = router;
+const chatSocketRouter = () =>{
+
+}
+
+// module.exports = router;
