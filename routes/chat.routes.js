@@ -1,9 +1,9 @@
 const express = require('express');
-const { requireSignin, isAuth } = require('../utils/authentication');
+const { isAuth } = require('../utils/authentication');
 
 const router = express.Router();
 
-router.get('/:userID/chat', requireSignin , isAuth , (req, res) => {
+router.get('/:userID/chat', isAuth , (req, res) => {
     res.send({message : "Welcome to chat room!"})
 })
 

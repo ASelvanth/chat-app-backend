@@ -2,6 +2,8 @@ const express = require('express');
 const Users = require('../models/users.model');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const mongoose = require('mongoose');
+
 //registration - signup
 const register = async (req, res) =>{
     // res.send('Welcome to register');
@@ -50,6 +52,7 @@ const signin = async (req, res) =>{
           const isValidUser =  await bcrypt.compare(password, existingUser.hashedPassword);
           
           if(isValidUser){
+            //Encryption
            const token = await jwt.sign({ _id : existingUser._id},process.env.SECRET_KEY);
             
             res.cookie('accessToken', token,{ 
@@ -59,8 +62,7 @@ const signin = async (req, res) =>{
                 // httpOnly : true,
             });
 
-            return res.status(201).send({
-                message : 'User has been signed in',
+            return res.status(201).send({message : 'User has been signed in',
                 // userID: existingUser._id;
             });
           }
@@ -71,7 +73,7 @@ const signin = async (req, res) =>{
         res.status(400).send({message : 'user does not exist'});
 
     }catch(error){
-
+        console.log('Error : ', error)
         res.status(500).send({ message : 'Internal Server Error',error : error });
     }  
 
@@ -90,5 +92,9 @@ const signout = async (req, res) =>{
 
     }
 }
+
+//Forgot password
+
+//Reset password
 
 module.exports = {register,signin,signout}
