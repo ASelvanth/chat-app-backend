@@ -21,11 +21,9 @@ app.use(cors({
     credentials : true,
 }));
 
-
 app.get('/',(req,res)=>{
     res.send("Chat App Home Page");
 });
-
 
 //Routes
 app.use('/api', authRoutes);
@@ -36,6 +34,6 @@ app.use('/api',userRoutes);
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT , () => {
-    console.log(`server running on port ${PORT}`);            
+    console.log(`App is running on port ${PORT}`);            
 });
 

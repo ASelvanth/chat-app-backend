@@ -1,24 +1,25 @@
 const express = require('express');
 const Users = require('../models/users.model');
+const Tokens = require('../models/tokens.model');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const mongoose = require('mongoose');
+const crypto = require('crypto');
+
+const {sendEmail } = require('../utils/sendEmail');
+const { response } = require('express');
 
 //registration - signup
 const register = async (req, res) =>{
     // res.send('Welcome to register');
     try{
         const payload = req.body;
-
         //if no password provided
         if(!payload.password){
-            return res.status(400).send({
-                message : " Password is required"
-            })
+            return res.status(400).send({message : " Password is required"})
         }
 
         //if password provided, then create hash password
-        const hashValue = await bcrypt.hash(payload.password , 10)
+        const hashValue = await bcrypt.hash(payload.password , 10);
         //once password is generated then give password to hash
         payload.hashedPassword = hashValue;
         //once hash password is generated then remove password from payload
@@ -30,8 +31,7 @@ const register = async (req, res) =>{
         //insert new user into db- save() done.
         newUser.save((err, data) =>{
             if(err){
-                return res.status(400).send({
-                    message : "Error while registering the user",error: err});
+                return res.status(400).send({message : "Error while registering the user",error: err});
             }           
             res.status(201).send({message : 'User have been registered', userID: data._id});
         });
@@ -56,7 +56,7 @@ const signin = async (req, res) =>{
            const token = await jwt.sign({ _id : existingUser._id},process.env.SECRET_KEY);
             
             res.cookie('accessToken', token,{ 
-                expire : new Date() + 8400000
+                expire : new Date() + 86400000
                 // sameSite : 'strict',
                 // path : '/',
                 // httpOnly : true,
@@ -94,7 +94,77 @@ const signout = async (req, res) =>{
 }
 
 //Forgot password
+const forgetPassword = async (req, res) =>{
+    try{
+        const {email} = req.body;
+        //email not provided
+        if(!email){
+            return res.status(400).send({message :'Email is mandatory'});
+        }
+        const user = await Users.findOne({email: email});
+
+        //if user does not exist
+        if(!user){
+            return res.status(400).send({message :" User does not exist"});
+        }
+
+        let token = await Tokens.findOne({userId : user._id});
+        //if token already have token previously -- old token will be delete here
+        if(token){
+            await token.deleteOne();
+        }
+        //new token will be created
+        let newToken = crypto.randomBytes(32).toString('hex');
+
+        // new token --> hashed token - for secured
+        const hashedToken = await bcrypt.hash(newToken , 10);
+
+        //validating the payload - all fields are valid
+        const tokenPayload = new Tokens({userI : user._id , token : hashedToken , createdAd :Date.now()});
+
+        await tokenPayload.save();
+
+        const link = `http://localhost:3000/passwordReset?token=${newToken}&id=${user._id}`;
+
+        const isSent = await sendEmail(user.email, 'password Reset link', {name : user.name , link : link});
+
+        if (!isSent) {
+            return res.status(500).send({message : 'Internal server error'})
+        }
+
+        res.status(200).send({message : 'Email sent successfully'});
+
+    }catch(error){
+        res.status(500).send({message : 'Internal Server Error'});
+    }
+}
 
 //Reset password
+const resetPassword = async (req, res) =>{
+    const {userId, token , password }= req.body;
+    let resetToken = await Tokens.findOne({userId : userId});
 
-module.exports = {register,signin,signout}
+    if(!resetToken){
+        return res.status(401).send({message : 'Invalid or expired token'});
+    }
+    //comparing the tokens  - validate
+    const isValid = await bcrypt.compare(token , resetToken.token);
+
+    if(!isValid){
+        return res.status(400).send({message : 'Invalid token'});
+    }
+    
+    const hashedPassword = await bcrypt.hash(password , 10);
+
+    await Users.findByIdAndUpdate({_id : userId},{hashedPassword : hashedPassword} ,(err, data) =>{
+        if(err){
+            return res.status(400).send({message : 'Error while resetting password'});
+        }        
+    });
+
+    await resetToken.deleteOne();
+
+    return res.status(200).send({message : 'Password has been reset successfully'});
+}
+
+module.exports = {register,signin,signout,forgetPassword ,resetPassword}
