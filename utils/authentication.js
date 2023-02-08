@@ -9,14 +9,19 @@ exports.isAuth = async (req, res, next) =>{
     // let user = req.auth._id === req.params.userID;
     // let user = req.auth._id ;
     // let user = true ;
-    const data = jwt.verify(cookies.accessToken ,process.env.SECRET_KEY);
+    if(cookies.accessToken){
+        let data = await jwt.verify(cookies.accessToken , process.env.SECRET_KEY);
     // console.log('Decrypted Data:', data._id);
-    req.id = data._id;
+        req.id = data._id;
 
-    if(!req.id){
-        return res.status(401).send({message: 'Not authorized'});
+        if(!req.id){
+            return res.status(401).send({message: 'Not authorized'});
+        }
+        
+        return next();
     }
-    next();
+    
+    return res.status(401).send({message: 'Not authorized'})
 }
 
 // module.exports = {isAuth };

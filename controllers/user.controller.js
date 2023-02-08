@@ -13,9 +13,7 @@ exports.getUser = async (req, res) => {
 
             return res.status(200).send({success: true, user: user });
         }
-        return res.status(400).send({
-            success: false,message: 'User does not exist'
-        });
+        return res.status(400).send({ success: false,message: 'User does not exist'});
 
     }catch(error){
         console.log('Error',error);

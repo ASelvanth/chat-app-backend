@@ -4,8 +4,10 @@ const Tokens = require('../models/tokens.model');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
+const mongoose = require('mongoose');
 
 const {sendEmail } = require('../utils/sendEmail');
+
 
 
 //registration - signup
@@ -55,12 +57,13 @@ const signin = async (req, res) =>{
             //Encryption
            const token = await jwt.sign({ _id : existingUser._id},process.env.SECRET_KEY);
             
-            res.cookie('accessToken', token,{ 
-                expire : new Date() + 86400000
+            res.cookie('accessToken', token,
+                {expire : new Date() + 86400000}
+                );
                 // sameSite : 'strict',
                 // path : '/',
                 // httpOnly : true,
-            });
+            
 
             return res.status(201).send({message : 'User has been signed in',
                 // userID: existingUser._id;
@@ -88,7 +91,7 @@ const signout = async (req, res) =>{
         res.status(200).send({message : 'User has been signed out'});
 
     }catch(error){
-        res.status(500).send({ message : 'Internal Server Error',error : error });
+        res.status(500).send({ message : 'Internal Server Error'});
 
     }
 }
@@ -128,7 +131,7 @@ const forgetPassword = async (req, res) =>{
 
         await sendEmail(user.email, 'Password Reset Link', {name: user.name, link: link});
 
-        res.status(200).send({message : 'Email sent successfully'});
+        res.status(200).send({message : 'Email has been sent successfully'});
 
     }catch(error){
         console.log('Error: ', error)
@@ -155,10 +158,13 @@ const resetPassword = async (req, res) =>{
     const hashedPassword = await bcrypt.hash(password , 10);
 
     Users.findByIdAndUpdate({_id : userId},{$set : {hashedPassword : hashedPassword}} ,(err, data) =>{
+        
         if(err){
             return res.status(400).send({message : 'Error while resetting password'});
         }        
+        
     });
+
 
     await resetToken.deleteOne();
 

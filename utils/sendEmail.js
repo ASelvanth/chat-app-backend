@@ -1,6 +1,8 @@
 const nodemailer = require('nodemailer');
 
 exports.sendEmail = async ( email, subject , payload)=>{
+    console.log('sending email...');
+
     try{
         var transporter = await nodemailer.createTransport({
             service : 'gmail',
@@ -28,8 +30,10 @@ exports.sendEmail = async ( email, subject , payload)=>{
         })
 
     }catch(error){
+
         console.log('Error  : send mail :' , err);
         return false;
+        
     }
 }
 
