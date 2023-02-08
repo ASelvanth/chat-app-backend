@@ -1,14 +1,22 @@
-// const express = require('express');
-// const { isAuth } = require('../utils/authentication');
 
-// const router = express.Router();
+const chatSocketRouter = (io) => {
+    io.on('connection', (socket) => {
 
-// router.get('/:userID/chat', isAuth , (req, res) => {
-//     res.send({message : "Welcome to chat room.!"})
-// })
+        socket.on('join-room', (data) => {
+            socket.join(data);
+            console.log(`user ${socket.id} has joined the room ${data}`);
+        });
+    
+        socket.on('send-message', (data) => {
+            console.log('Data: ', data );
+            socket.to(data.room).emit('receive-message', data);
+        } );
+    
+        socket.on('disconnect', () => {
+            console.log('User Disconnected: ', socket.id);
+        })
+    })
+};
 
-const chatSocketRouter = () =>{
 
-}
-
-// module.exports = router;
+module.exports = chatSocketRouter;
